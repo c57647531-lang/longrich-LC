@@ -165,7 +165,7 @@ const initPermissions = async () => {
 
 const syncDatabase = async () => {
   try {
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ true: true });
     console.log('✅ Tables synchronisées (Postgres)');
     await initPermissions();
     console.log('✅ Permissions initialisées');
