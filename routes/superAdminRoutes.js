@@ -18,6 +18,10 @@ import {
   deleteProduitLongrich,
   duplicateProduitsBoutique,
   getStatsCA,
+  createAdmin,        // ⬅️ NEW
+  getAllAdmins,       // ⬅️ NEW
+  suspendAdmin,       // ⬅️ NEW
+  deleteAdmin,        // ⬅️ NEW
 } from '../controllers/superAdminController.js';
 import { authSuperAdmin } from '../middleware/auth.js';
 
@@ -27,7 +31,7 @@ const router = express.Router();
 router.post('/register', registerSuperAdmin);
 router.post('/login', loginSuperAdmin);
 
-// Toutes les routes suivantes sont protégées
+// Protégé
 router.use(authSuperAdmin);
 
 // Admin secondaires
@@ -36,6 +40,12 @@ router.get('/admins-secondaires', getAllAdminSecondaire);
 router.put('/admins-secondaires/:id/permissions', updatePermissionsAdminSecondaire);
 router.post('/admins-secondaires/:id/suspend', suspendAdminSecondaire);
 router.delete('/admins-secondaires/:id', deleteAdminSecondaire);
+
+// Admins (boutiquiers)
+router.post('/admins', createAdmin);
+router.get('/admins', getAllAdmins);
+router.post('/admins/:id/suspend', suspendAdmin);
+router.delete('/admins/:id', deleteAdmin);
 
 // Boutiques
 router.post('/boutiques', createBoutique);

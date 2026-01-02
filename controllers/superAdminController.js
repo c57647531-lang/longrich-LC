@@ -124,8 +124,17 @@ export const deleteAdminSecondaire = async (req, res) => {
 // BOUTIQUES
 export const createBoutique = async (req, res) => {
   try {
-    const { proprietaireId, nom, type, typeAutre, quartier, ville, numeroTel, active, autoriseAjoutProduits } =
-      req.body;
+    const {
+      adminId,      // ⬅️ un Admin (boutiquier)
+      nom,
+      type,
+      typeAutre,
+      quartier,
+      ville,
+      numeroTel,
+      active,
+      autoriseAjoutProduits,
+    } = req.body;
 
     let photoBoutique = null;
     let logoBoutique = null;
@@ -137,10 +146,11 @@ export const createBoutique = async (req, res) => {
       logoBoutique = await uploadFile(req.files.logoBoutique[0].path);
     }
 
-    const lienVitrine = `/boutique-${nom.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    const slug = slugify(nom, { lower: true, strict: true });
+    const lienVitrine = `/boutique/${slug}-${Date.now()}`;
 
     const boutique = await db.Boutique.create({
-      proprietaireId,
+      AdminId: adminId,     // ⬅️ rattachement au boutiquier
       nom,
       type,
       typeAutre,
@@ -164,6 +174,9 @@ export const getAllBoutiques = async (req, res) => {
   const boutiques = await db.Boutique.findAll({
     include: [
       {
+        model: db.Admin,
+      },
+      {
         model: db.AdminSecondaire,
         as: 'proprietaire',
         include: [
@@ -177,6 +190,7 @@ export const getAllBoutiques = async (req, res) => {
   });
   res.json(boutiques);
 };
+
 
 export const updateBoutique = async (req, res) => {
   try {
@@ -295,4 +309,56 @@ export const getStatsCA = async (req, res) => {
     group: ['Boutique.id'],
   });
   res.json(stats);
+};
+
+
+
+
+// === ADMIN (boutiquier) ===
+export const createAdmin = async (req, res) => {
+  try {
+    const { nom, email, telephone, password } = req.body;
+
+    const existingTel = await db.Admin.findOne({ where: { telephone } });
+    if (existingTel) {
+      return res.status(400).json({ message: 'Téléphone déjà utilisé' });
+    }
+
+    if (email) {
+      const existingMail = await db.Admin.findOne({ where: { email } });
+      if (existingMail) {
+        return res.status(400).json({ message: 'Email déjà utilisé' });
+      }
+    }
+
+    const hashed = await bcrypt.hash(password, 12);
+
+    const admin = await db.Admin.create({
+      nom,
+      email: email || null,
+      telephone,
+      password: hashed,
+    });
+
+    res.status(201).json({ message: 'Admin créé', admin });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const getAllAdmins = async (req, res) => {
+  const admins = await db.Admin.findAll();
+  res.json(admins);
+};
+
+export const suspendAdmin = async (req, res) => {
+  const { id } = req.params;
+  await db.Admin.update({ suspendu: true }, { where: { id } });
+  res.json({ message: 'Admin suspendu' });
+};
+
+export const deleteAdmin = async (req, res) => {
+  const { id } = req.params;
+  await db.Admin.destroy({ where: { id } });
+  res.json({ message: 'Admin supprimé' });
 };
