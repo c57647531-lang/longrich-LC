@@ -1,1 +1,44 @@
+# Node
 node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environnements
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log
+logs/*.log
+
+# Build / dist
+dist
+build
+coverage
+
+# Uploads locaux
+uploads
+uploads/*
+
+# OS / éditeur
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+
+# Vite / cache
+.vite
+.cache
+
+# Test output
+jest-html-reporters-*.html

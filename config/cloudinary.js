@@ -1,3 +1,4 @@
+// config/cloudinary.js
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -10,40 +11,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || '',
+  api_key: process.env.CLOUDINARY_API_KEY || '',
+  api_secret: process.env.CLOUDINARY_API_SECRET || '',
 });
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
+
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
 
 export const uploadFile = async (filePath) => {
-  try {
-    // Test connexion internet
-    const online = await fetch('https://api.cloudinary.com', { method: 'HEAD', mode: 'no-cors' })
-      .then(() => true)
-      .catch(() => false);
-
-    if (online && process.env.CLOUDINARY_CLOUD_NAME) {
-      // Cloudinary
+  if (process.env.CLOUDINARY_CLOUD_NAME) {
+    try {
       const result = await cloudinary.uploader.upload(filePath, {
-        folder: 'longrich/boutiques'
+        folder: 'longrich/boutiques',
+        resource_type: 'auto',
       });
-      // Supprime local
       fs.unlinkSync(filePath);
       return result.secure_url;
-    } else {
-      // Local
-      const filename = Date.now() + path.basename(filePath);
-      const destPath = path.join(UPLOAD_DIR, filename);
-      fs.renameSync(filePath, destPath);
-      return `/uploads/${filename}`;
+    } catch (error) {
+      console.error('Cloudinary error, fallback local:', error.message);
     }
-  } catch (error) {
-    // Fallback local
-    const filename = Date.now() + path.basename(filePath);
-    const destPath = path.join(UPLOAD_DIR, filename);
-    fs.renameSync(filePath, destPath);
-    return `/uploads/${filename}`;
   }
+
+  const fileName = Date.now() + '-' + path.basename(filePath);
+  const destPath = path.join(UPLOAD_DIR, fileName);
+  fs.renameSync(filePath, destPath);
+  return `/uploads/${fileName}`;
 };
